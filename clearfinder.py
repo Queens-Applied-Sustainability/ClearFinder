@@ -72,9 +72,10 @@ def solar_incident_radiation(time, lat, lng):
     return G0
 
 
-def find(infile, lat, lng):
+def find(infile, lat, lng, leaveroom=False):
     """ Given a file of solar data stuff, identify the clear and cloudy
-    points. Returns a numpy array with a boolean column 'clear'."""
+    points. Returns a numpy array with a boolean column 'clear'.
+    leaveroom: create columns for AOD and cloud thickness"""
     
     # read in the raw data
     raw = genfromtxt(infile, delimiter=FILE_DELIMITER, names=True,
@@ -89,6 +90,8 @@ def find(infile, lat, lng):
                   if row['irrad'] > NIGHT_CONST or not SKIP_NIGHT]
     
     # Build the new array
+    if leaveroom:
+        data_cols += ['AOD', 'cloud']
     clean = empty(len(light_rows),
         dtype=[
             ('time', datetime.datetime), ('clear', bool),
