@@ -24,6 +24,7 @@ The output CSV will have the following additional columns:
 """
 
 import datetime
+from pytz import timezone
 from numpy import array, sin, cos, genfromtxt, pi, float64, empty
 
 # RUNNING CONSTANTS -- modify to suit
@@ -72,7 +73,7 @@ def solar_incident_radiation(time, lat, lng):
     return G0
 
 
-def find(infile, lat, lng, leaveroom=False):
+def find(infile, lat, lng, tz='EST', leaveroom=False):
     """ Given a file of solar data stuff, identify the clear and cloudy
     points. Returns a numpy array with a boolean column 'clear'.
     leaveroom: create columns for AOD and cloud thickness"""
@@ -90,14 +91,16 @@ def find(infile, lat, lng, leaveroom=False):
                   if row['irrad'] > NIGHT_CONST or not SKIP_NIGHT]
     
     # Build the new array
-    if leaveroom:
-        data_cols += ['AOD', 'cloud']
+    extra_cols = data_cols + (('AOD', 'cloud') if leaveroom else ())
     clean = empty(len(light_rows),
         dtype=[
             ('time', datetime.datetime), ('clear', bool),
             ('dG', float64), ('G0', float64), ('kt', float64)
-            ] + [(name, float64) for name in data_cols]
+            ] + [(name, float64) for name in extra_cols]
         )
+    
+    # Set up the timezone
+    tzone = {'tzinfo': timezone(tz)}
     
     # process the data
     for clean_num, raw_num in enumerate(light_rows):
@@ -108,7 +111,7 @@ def find(infile, lat, lng, leaveroom=False):
         
         # Convert and save the time (yeah, the "next" row...)
         clean[next]['time'] = datetime.datetime(*[int(raw[raw_num][name])
-                                                    for name in time_cols])
+                                                    for name in time_cols], **tzone)
     
         # Copy the data columns
         for datum in data_cols:

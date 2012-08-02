@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(name='ClearFinder',
-      version='0.1.1',
+      version='0.1.6',
       author='Philip Schleihauf',
       author_email='uniphil@gmail.com',
       license='GPLv3',
